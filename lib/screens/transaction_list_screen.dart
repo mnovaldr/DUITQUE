@@ -25,11 +25,20 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
     final transactions = _filterTransactions(provider.transactions);
 
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           'Semua Transaksi',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+            fontSize: 18,
           ),
         ),
       ),
@@ -37,59 +46,55 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
         children: [
           // Filter Section
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             color: Colors.white,
             child: Column(
               children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      FilterChip(
-                        label: const Text('Semua'),
-                        selected: _selectedFilter == 'all',
-                        onSelected: (_) {
+                // Filter Chips
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildFilterChip(
+                        label: 'Semua',
+                        isSelected: _selectedFilter == 'all',
+                        onTap: () {
                           setState(() {
                             _selectedFilter = 'all';
                           });
                         },
                       ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: const Text('Pemasukan'),
-                        selected: _selectedFilter == 'income',
-                        onSelected: (_) {
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildFilterChip(
+                        label: 'Pemasukan',
+                        isSelected: _selectedFilter == 'income',
+                        color: AppTheme.successColor,
+                        onTap: () {
                           setState(() {
                             _selectedFilter = 'income';
                           });
                         },
-                        selectedColor: AppTheme.successColor.withOpacity(0.1),
-                        labelStyle: GoogleFonts.inter(
-                          color: _selectedFilter == 'income'
-                              ? AppTheme.successColor
-                              : AppTheme.textPrimary,
-                        ),
                       ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: const Text('Pengeluaran'),
-                        selected: _selectedFilter == 'expense',
-                        onSelected: (_) {
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildFilterChip(
+                        label: 'Pengeluaran',
+                        isSelected: _selectedFilter == 'expense',
+                        color: AppTheme.errorColor,
+                        onTap: () {
                           setState(() {
                             _selectedFilter = 'expense';
                           });
                         },
-                        selectedColor: AppTheme.errorColor.withOpacity(0.1),
-                        labelStyle: GoogleFonts.inter(
-                          color: _selectedFilter == 'expense'
-                              ? AppTheme.errorColor
-                              : AppTheme.textPrimary,
-                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                
+                // Summary Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -97,7 +102,8 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                       'Total: ${transactions.length} transaksi',
                       style: GoogleFonts.inter(
                         color: AppTheme.textSecondary,
-                        fontSize: 14,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
@@ -105,7 +111,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                       style: GoogleFonts.poppins(
                         color: AppTheme.primaryColor,
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -113,8 +119,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
               ],
             ),
           ),
-          const Divider(height: 1),
-
+          
           // Transactions List
           Expanded(
             child: transactions.isEmpty
@@ -122,70 +127,161 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.receipt_long,
-                          size: 64,
-                          color: AppTheme.textSecondary.withOpacity(0.5),
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.receipt_long_outlined,
+                            size: 56,
+                            color: AppTheme.textSecondary.withOpacity(0.3),
+                          ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         Text(
                           'Tidak ada transaksi',
+                          style: GoogleFonts.poppins(
+                            color: AppTheme.textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Transaksi yang Anda buat akan\nmuncul di sini',
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: AppTheme.textSecondary,
-                            fontSize: 16,
+                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: transactions.length,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: _getItemCount(transactions),
                     itemBuilder: (context, index) {
-                      final transaction = transactions[index];
-                      
-                      // Group by date
-                      if (index == 0 ||
-                          !_isSameDate(
-                            transaction.date,
-                            transactions[index - 1].date,
-                          )) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Text(
-                                _formatDateHeader(transaction.date),
-                                style: GoogleFonts.inter(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            TransactionCard(
-                              transaction: transaction,
-                              onTap: () {
-                                _showTransactionDetails(context, transaction, provider);
-                              },
-                            ),
-                          ],
-                        );
-                      }
-                      
-                      return TransactionCard(
-                        transaction: transaction,
-                        onTap: () {
-                          _showTransactionDetails(context, transaction, provider);
-                        },
-                      );
+                      return _buildTransactionItem(context, transactions, index, provider);
                     },
                   ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    Color? color,
+    required VoidCallback onTap,
+  }) {
+    final chipColor = color ?? AppTheme.primaryColor;
+    
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? chipColor.withOpacity(0.1)
+              : AppTheme.backgroundColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? chipColor : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isSelected)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Icon(
+                  Icons.check,
+                  size: 16,
+                  color: chipColor,
+                ),
+              ),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                color: isSelected ? chipColor : AppTheme.textPrimary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _getItemCount(List<Transaction> transactions) {
+    int count = 0;
+    for (int i = 0; i < transactions.length; i++) {
+      if (i == 0 || !_isSameDate(transactions[i].date, transactions[i - 1].date)) {
+        count++; // Date header
+      }
+      count++; // Transaction item
+    }
+    return count;
+  }
+
+  Widget _buildTransactionItem(
+    BuildContext context,
+    List<Transaction> transactions,
+    int displayIndex,
+    TransactionProvider provider,
+  ) {
+    int transactionIndex = 0;
+    int currentDisplayIndex = 0;
+
+    for (int i = 0; i < transactions.length; i++) {
+      // Check if we need a date header
+      if (i == 0 || !_isSameDate(transactions[i].date, transactions[i - 1].date)) {
+        if (currentDisplayIndex == displayIndex) {
+          // Return date header
+          return Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            margin: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              _formatDateHeader(transactions[i].date),
+              style: GoogleFonts.inter(
+                color: AppTheme.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          );
+        }
+        currentDisplayIndex++;
+      }
+
+      if (currentDisplayIndex == displayIndex) {
+        // Return transaction card
+        final transaction = transactions[i];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: TransactionCard(
+            transaction: transaction,
+            onTap: () {
+              _showTransactionDetails(context, transaction, provider);
+            },
+          ),
+        );
+      }
+      currentDisplayIndex++;
+    }
+
+    return const SizedBox.shrink();
   }
 
   List<Transaction> _filterTransactions(List<Transaction> transactions) {
@@ -218,13 +314,13 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
     if (date.year == now.year &&
         date.month == now.month &&
         date.day == now.day) {
-      return 'Hari Ini';
+      return 'HARI INI';
     } else if (date.year == yesterday.year &&
         date.month == yesterday.month &&
         date.day == yesterday.day) {
-      return 'Kemarin';
+      return 'KEMARIN';
     } else {
-      return DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(date);
+      return DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(date).toUpperCase();
     }
   }
 
@@ -242,127 +338,168 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
           margin: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      transaction.title,
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
-                        color: transaction.type == 'income'
-                            ? AppTheme.successColor.withOpacity(0.1)
-                            : AppTheme.errorColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        transaction.type == 'income' ? 'Pemasukan' : 'Pengeluaran',
-                        style: GoogleFonts.inter(
-                          color: transaction.type == 'income'
-                              ? AppTheme.successColor
-                              : AppTheme.errorColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '${transaction.type == 'income' ? '+' : '-'}Rp ${NumberFormat('#,###', 'id_ID').format(transaction.amount)}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    color: transaction.type == 'income'
-                        ? AppTheme.successColor
-                        : AppTheme.errorColor,
                   ),
-                ),
-                const SizedBox(height: 24),
-                _buildDetailRow('Kategori', transaction.category),
-                _buildDetailRow('Tanggal', transaction.formattedDate),
-                _buildDetailRow('Waktu', transaction.formattedTime),
-                if (transaction.paymentMethod != null)
-                  _buildDetailRow('Metode Bayar', transaction.paymentMethod!),
-                if (transaction.notes != null && transaction.notes!.isNotEmpty)
-                  Column(
+                  const SizedBox(height: 24),
+                  
+                  // Header with Title and Type Badge
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 16),
-                      Text(
-                        'Catatan',
-                        style: GoogleFonts.inter(
-                          color: AppTheme.textSecondary,
-                          fontSize: 14,
+                      Expanded(
+                        child: Text(
+                          transaction.title,
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        transaction.notes!,
-                        style: GoogleFonts.inter(
-                          color: AppTheme.textPrimary,
-                          fontSize: 16,
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: transaction.type == 'income'
+                              ? AppTheme.successColor.withOpacity(0.1)
+                              : AppTheme.errorColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          transaction.type == 'income' ? 'Pemasukan' : 'Pengeluaran',
+                          style: GoogleFonts.inter(
+                            color: transaction.type == 'income'
+                                ? AppTheme.successColor
+                                : AppTheme.errorColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                const SizedBox(height: 32),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _deleteTransaction(transaction.id, provider);
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 16),
+                  
+                  // Amount
+                  Text(
+                    '${transaction.type == 'income' ? '+' : '-'}Rp ${NumberFormat('#,###', 'id_ID').format(transaction.amount)}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      color: transaction.type == 'income'
+                          ? AppTheme.successColor
+                          : AppTheme.errorColor,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Details Section
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.backgroundColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildDetailRow('Kategori', transaction.category),
+                        const Divider(height: 24),
+                        _buildDetailRow('Tanggal', transaction.formattedDate),
+                        const Divider(height: 24),
+                        _buildDetailRow('Waktu', transaction.formattedTime),
+                        if (transaction.paymentMethod != null) ...[
+                          const Divider(height: 24),
+                          _buildDetailRow('Metode Bayar', transaction.paymentMethod!),
+                        ],
+                      ],
+                    ),
+                  ),
+                  
+                  // Notes Section
+                  if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Catatan',
+                            style: GoogleFonts.inter(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          side: BorderSide(color: AppTheme.errorColor),
-                        ),
-                        child: Text(
-                          'Hapus',
-                          style: GoogleFonts.inter(
-                            color: AppTheme.errorColor,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 8),
+                          Text(
+                            transaction.notes!,
+                            style: GoogleFonts.inter(
+                              color: AppTheme.textPrimary,
+                              fontSize: 15,
+                              height: 1.5,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ],
-                ),
-              ],
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Delete Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _deleteTransaction(transaction.id, provider);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: const BorderSide(color: AppTheme.errorColor, width: 2),
+                      ),
+                      child: Text(
+                        'Hapus Transaksi',
+                        style: GoogleFonts.inter(
+                          color: AppTheme.errorColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -371,28 +508,26 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
   }
 
   Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              color: AppTheme.textSecondary,
-              fontSize: 14,
-            ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            color: AppTheme.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
           ),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              color: AppTheme.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            color: AppTheme.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -400,15 +535,22 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
     final confirmed = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         title: Text(
-          'Hapus Transaksi',
+          'Hapus Transaksi?',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
+            fontSize: 18,
           ),
         ),
         content: Text(
-          'Apakah Anda yakin ingin menghapus transaksi ini?',
-          style: GoogleFonts.inter(),
+          'Transaksi yang dihapus tidak dapat dikembalikan.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: AppTheme.textSecondary,
+          ),
         ),
         actions: [
           TextButton(
@@ -417,11 +559,19 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
               'Batal',
               style: GoogleFonts.inter(
                 color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              backgroundColor: AppTheme.errorColor.withOpacity(0.1),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             child: Text(
               'Hapus',
               style: GoogleFonts.inter(
@@ -444,6 +594,10 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
               style: GoogleFonts.inter(),
             ),
             backgroundColor: AppTheme.successColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
       }
